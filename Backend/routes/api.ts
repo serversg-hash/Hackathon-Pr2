@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { getIsUsingFallbackDB } from '../config/db';
-import { verifyToken, requireRole } from '../middlewares/auth';
-import { demoLogin, syncProfile, getAllUsers, addTechnician, getTechnicians, signUp, login, requestOTP, resetPassword, updateTechnicianProfile } from '../controllers/authController';
+import { getIsUsingFallbackDB } from '../config/db.js';
+import { verifyToken, requireRole } from '../middlewares/auth.js';
+import { demoLogin, syncProfile, getAllUsers, addTechnician, getTechnicians, signUp, login, requestOTP, resetPassword, updateTechnicianProfile } from '../controllers/authController.js';
 import {
   getPublicAsset,
   getAllAssets,
@@ -10,7 +10,7 @@ import {
   updateAsset,
   deleteAsset,
   getAllHistory,
-} from '../controllers/assetController';
+} from '../controllers/assetController.js';
 import {
   reportIssue,
   getAllIssues,
@@ -20,7 +20,7 @@ import {
   suggestIssueDescription,
   getIssueMessages,
   sendIssueMessage,
-} from '../controllers/issueController';
+} from '../controllers/issueController.js';
 
 const router = Router();
 
