@@ -1,8 +1,6 @@
 import { Response, NextFunction } from 'express';
 import { Request } from 'express';
 import jwt from 'jsonwebtoken';
-import { isFirebaseConfigured } from '../config/firebase-admin.js';
-import { getAuth } from 'firebase-admin/auth';
 import { dbService } from '../services/dbService.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'maintainiq_default_secret_key';
@@ -113,14 +111,12 @@ export async function verifyToken(req: AuthRequest, res: Response, next: NextFun
     return next();
   }
 
-  // 3. Real Firebase Token verification
-  if (isFirebaseConfigured) {
-    try {
-      console.log('Verifying Firebase token...');
-      const decodedToken = await getAuth().verifyIdToken(token);
-      console.log('Firebase token verified, uid:', decodedToken.uid);
+  // 3. Fallback for JWT-based tokens (e.g. from previous Firebase auth)
+  try {
+    const decodedToken = safeDecodeJWT(token);
+    if (decodedToken && (decodedToken.sub || decodedToken.uid || decodedToken.email)) {
       const email = decodedToken.email || '';
-      const uid = decodedToken.uid;
+      const uid = decodedToken.sub || decodedToken.uid || `mock-sub-${Date.now()}`;
       const name = decodedToken.name || email.split('@')[0] || 'User';
 
       // Look up user in db by uid or email
@@ -134,12 +130,12 @@ export async function verifyToken(req: AuthRequest, res: Response, next: NextFun
 
       let role: 'Admin' | 'Technician' | 'User' = 'User';
       const emailLower = email.toLowerCase();
-
+      
       // Check if any admin exists
       const adminExists = await dbService.users.findOne({ role: 'Admin' });
       
       if (!adminExists) {
-        role = 'Admin';
+          role = 'Admin';
       } else if (userProfile) {
         role = userProfile.role;
       }
@@ -160,71 +156,14 @@ export async function verifyToken(req: AuthRequest, res: Response, next: NextFun
         name: userProfile?.name || name,
       };
       return next();
-    } catch (err: any) {
-      console.error('Firebase Auth Verification Error:', err.message);
-      return res.status(403).json({ error: `Forbidden: ${err.message}` });
     }
-  } else {
-    // Graceful fallback for Firebase ID tokens in sandbox/preview environments
-    try {
-      const decodedToken = safeDecodeJWT(token);
-      if (decodedToken && (decodedToken.sub || decodedToken.uid || decodedToken.email)) {
-        // Expiry check (Disabled for development/preview)
-        // if (decodedToken.exp && (Date.now() / 1000) > decodedToken.exp) {
-        //   console.error('Fallback Auth: Token expired');
-        //   return res.status(403).json({ error: 'Forbidden: Invalid or expired token' });
-        // }
-
-        const email = decodedToken.email || '';
-        const uid = decodedToken.sub || decodedToken.uid || `mock-sub-${Date.now()}`;
-        const name = decodedToken.name || email.split('@')[0] || 'User';
-
-        // Look up user in db by uid or email
-        let userProfile = await dbService.users.findOne({ uid });
-        if (!userProfile && email) {
-          userProfile = await dbService.users.findOne({ email: email.toLowerCase() });
-          if (userProfile) {
-            await dbService.users.findOneAndUpdate({ email: email.toLowerCase() }, { uid });
-          }
-        }
-
-        let role: 'Admin' | 'Technician' | 'User' = 'User';
-        const emailLower = email.toLowerCase();
-        
-        // Check if any admin exists
-        const adminExists = await dbService.users.findOne({ role: 'Admin' });
-        
-        if (!adminExists) {
-            role = 'Admin';
-        } else if (userProfile) {
-          role = userProfile.role;
-        }
-
-        if (!userProfile) {
-          userProfile = await dbService.users.create({
-            uid,
-            email: emailLower,
-            name,
-            role,
-          });
-        }
-
-        req.user = {
-          uid,
-          email: emailLower,
-          role,
-          name: userProfile?.name || name,
-        };
-        return next();
-      }
-    } catch (err) {
-      console.error('Error in Firebase token fallback decoding:', err);
-    }
-
-    return res.status(401).json({
-      error: 'Unauthorized: Invalid token or Authentication not configured.',
-    });
+  } catch (err) {
+    console.error('Error in token fallback decoding:', err);
   }
+
+  return res.status(401).json({
+    error: 'Unauthorized: Invalid token.',
+  });
 }
 
 export function requireRole(roles: Array<'Admin' | 'Technician' | 'User' | 'Public'>) {

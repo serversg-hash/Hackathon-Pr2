@@ -3,8 +3,6 @@ import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import { AuthRequest } from '../middlewares/auth.js';
 import { dbService } from '../services/dbService.js';
-import { isFirebaseConfigured } from '../config/firebase-admin.js';
-import { getAuth } from 'firebase-admin/auth';
 import bcrypt from 'bcryptjs';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'maintainiq_default_secret_key';
@@ -141,38 +139,7 @@ export async function addTechnician(req: AuthRequest, res: Response) {
 
     const sanitizedEmail = email.toLowerCase().trim();
     let existingUser = await dbService.users.findOne({ email: sanitizedEmail });
-    let uidToSet = existingUser?.uid;
-
-    if (isFirebaseConfigured && password) {
-      try {
-        let firebaseUser;
-        try {
-          firebaseUser = await getAuth().getUserByEmail(sanitizedEmail);
-        } catch (err: any) {
-          if (err.code !== 'auth/user-not-found') {
-            throw err;
-          }
-        }
-
-        if (firebaseUser) {
-          await getAuth().updateUser(firebaseUser.uid, {
-            password,
-            displayName: name,
-          });
-          uidToSet = firebaseUser.uid;
-        } else {
-          const createdUser = await getAuth().createUser({
-            email: sanitizedEmail,
-            password,
-            displayName: name,
-          });
-          uidToSet = createdUser.uid;
-        }
-      } catch (firebaseErr: any) {
-        console.error('Error syncing/creating Firebase user:', firebaseErr);
-        return res.status(400).json({ error: `Firebase Admin error: ${firebaseErr.message}` });
-      }
-    }
+    let uidToSet = existingUser?.uid || `tech-uid-${Date.now()}`;
 
     const updateFields: any = { role: 'Technician', name };
     if (password) {
