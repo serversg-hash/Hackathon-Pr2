@@ -1,9 +1,9 @@
-import { getIsUsingFallbackDB, fallbackStore } from '../config/db';
-import { Asset } from '../models/asset';
-import { Issue } from '../models/issue';
-import { History } from '../models/history';
-import { User } from '../models/user';
-import { Message } from '../models/message';
+import { getIsUsingFallbackDB, fallbackStore } from '../config/db.js';
+import { Asset } from '../models/asset.js';
+import { Issue } from '../models/issue.js';
+import { History } from '../models/history.js';
+import { User } from '../models/user.js';
+import { Message } from '../models/message.js';
 
 export const dbService = {
   assets: {

@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
-import { AuthRequest } from '../middlewares/auth';
-import { dbService } from '../services/dbService';
-import { isFirebaseConfigured } from '../config/firebase-admin';
+import { AuthRequest } from '../middlewares/auth.js';
+import { dbService } from '../services/dbService.js';
+import { isFirebaseConfigured } from '../config/firebase-admin.js';
 import { getAuth } from 'firebase-admin/auth';
 import bcrypt from 'bcryptjs';
 

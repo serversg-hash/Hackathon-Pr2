@@ -1,9 +1,9 @@
 import { Response, NextFunction } from 'express';
 import { Request } from 'express';
 import jwt from 'jsonwebtoken';
-import { isFirebaseConfigured } from '../config/firebase-admin';
+import { isFirebaseConfigured } from '../config/firebase-admin.js';
 import { getAuth } from 'firebase-admin/auth';
-import { dbService } from '../services/dbService';
+import { dbService } from '../services/dbService.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'maintainiq_default_secret_key';
 

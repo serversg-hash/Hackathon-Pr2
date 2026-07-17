@@ -1,8 +1,8 @@
 import { Response } from 'express';
-import { AuthRequest } from '../middlewares/auth';
-import { dbService } from '../services/dbService';
+import { AuthRequest } from '../middlewares/auth.js';
+import { dbService } from '../services/dbService.js';
 import { GoogleGenAI, Type } from '@google/genai';
-import { sanitizeInput } from './assetController';
+import { sanitizeInput } from './assetController.js';
 
 // Lazily initialize Gemini AI to prevent server crashes if the API key is missing
 let aiClient: GoogleGenAI | null = null;

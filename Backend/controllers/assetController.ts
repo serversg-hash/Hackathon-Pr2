@@ -1,6 +1,6 @@
 import { Response } from 'express';
-import { AuthRequest } from '../middlewares/auth';
-import { dbService } from '../services/dbService';
+import { AuthRequest } from '../middlewares/auth.js';
+import { dbService } from '../services/dbService.js';
 
 // Security: script-filtering (HTML tag and script strip/escape)
 export function sanitizeInput(str: any): any {

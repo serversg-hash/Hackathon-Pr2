@@ -1,10 +1,10 @@
 import mongoose from 'mongoose';
 import fs from 'fs';
 import path from 'path';
-import { User } from '../models/user';
-import { Asset } from '../models/asset';
-import { Issue } from '../models/issue';
-import { History } from '../models/history';
+import { User } from '../models/user.js';
+import { Asset } from '../models/asset.js';
+import { Issue } from '../models/issue.js';
+import { History } from '../models/history.js';
 import bcrypt from 'bcryptjs';
 
 export let isUsingFallbackDB = false;
