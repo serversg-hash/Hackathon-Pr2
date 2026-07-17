@@ -1,0 +1,18 @@
+[
+  {
+    "uid": "admin-uid-12345",
+    "email": "admin@maintainiq.com",
+    "name": "System Administrator",
+    "role": "Admin",
+    "createdAt": "2026-07-13T19:27:42.560Z",
+    "updatedAt": "2026-07-13T19:27:42.562Z"
+  },
+  {
+    "uid": "technician-uid-12345",
+    "email": "tech.jane@maintainiq.com",
+    "name": "Jane Technician",
+    "role": "Technician",
+    "createdAt": "2026-07-13T19:27:42.562Z",
+    "updatedAt": "2026-07-13T19:27:42.562Z"
+  }
+]

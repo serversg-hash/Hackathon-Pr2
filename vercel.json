@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "Backend/vercel-entry.ts",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "buildCommand": "npm run build:frontend",
+        "distDir": "Frontend/dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/v1/(.*)",
+      "dest": "Backend/vercel-entry.ts"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "Frontend/index.html"
+    }
+  ]
+}

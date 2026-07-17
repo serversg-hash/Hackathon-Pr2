@@ -1,0 +1,28 @@
+[
+  {
+    "name": "Classroom Projector 01",
+    "code": "PROJ-01",
+    "category": "IT / AV",
+    "location": "Room 401",
+    "condition": "Fair",
+    "status": "Operational",
+    "lastServiceDate": "2026-05-10T10:00:00.000Z",
+    "nextServiceDate": "2026-11-10T10:00:00.000Z",
+    "assignedTechnician": "Jane Technician",
+    "createdAt": "2026-07-13T19:27:42.562Z",
+    "updatedAt": "2026-07-13T19:27:42.562Z"
+  },
+  {
+    "name": "Central HVAC Compressor",
+    "code": "HVAC-MAIN",
+    "category": "HVAC",
+    "location": "Roof Block B",
+    "condition": "Good",
+    "status": "Operational",
+    "lastServiceDate": "2026-06-01T10:00:00.000Z",
+    "nextServiceDate": "2026-12-01T10:00:00.000Z",
+    "assignedTechnician": "Tech John",
+    "createdAt": "2026-07-13T19:27:42.562Z",
+    "updatedAt": "2026-07-13T19:27:42.562Z"
+  }
+]
