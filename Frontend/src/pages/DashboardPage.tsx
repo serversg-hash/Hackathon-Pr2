@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Folder, AlertTriangle, History, LogOut, Plus, 
   Search, Filter, CheckCircle, Clock, Hammer, Ban, ShieldAlert, 
   QrCode, Printer, Download, Trash2, Edit3, ClipboardList, 
-  User, Calendar, DollarSign, PenTool, Shield, Tag, MapPin, Loader2, RefreshCw, Send 
+  User, Calendar, DollarSign, PenTool, Shield, Tag, MapPin, Loader2, RefreshCw, Send, Sparkles 
 } from 'lucide-react';
 
 type TabType = 'analytics' | 'assets' | 'issues' | 'history' | 'users';
@@ -58,6 +58,8 @@ interface SyncedUser {
   name: string;
   email: string;
   role: 'Admin' | 'Technician' | 'User';
+  category?: string;
+  isOnline?: boolean;
   createdAt?: string;
 }
 
@@ -131,10 +133,34 @@ export default function DashboardPage() {
   }, [user]);
 
   const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const [isImprovingWriting, setIsImprovingWriting] = useState(false);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleImproveWriting = async (text: string, context: string, setter: (val: string) => void) => {
+    if (!text.trim()) return;
+    try {
+      setIsImprovingWriting(true);
+      const res = await fetch('/api/v1/ai/improve-writing', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user?.token}`
+        },
+        body: JSON.stringify({ text, context })
+      });
+      const data = await res.json();
+      if (data.improvedText) {
+        setter(data.improvedText);
+      }
+    } catch (err) {
+      console.error('Error improving writing:', err);
+    } finally {
+      setIsImprovingWriting(false);
+    }
   };
 
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -258,8 +284,15 @@ export default function DashboardPage() {
       }
       fetchData();
       fetchTechnicians();
+
+      // Periodic refresh for technician online status (every 10 seconds)
+      const techInterval = setInterval(() => {
+        fetchTechnicians();
+      }, 10000);
+
+      return () => clearInterval(techInterval);
     }
-  }, [user]);
+  }, [user, fetchTechnicians]);
 
   // Handle periodic fetching for chat messages of selected issue
   useEffect(() => {
@@ -1293,7 +1326,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Available Technicians and User Reports for Users */}
-                {user?.role === 'User' && (
+                {(user?.role === 'User' || user?.role === 'Admin' || user?.role === 'Technician') && (
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                       <div className="bg-white p-6 rounded-2xl border border-slate-150 shadow-sm space-y-4">
@@ -1310,11 +1343,11 @@ export default function DashboardPage() {
                                 <div className="truncate">
                                   <p className="text-xs font-bold text-slate-800 truncate">{tech.name}</p>
                                   <span className="inline-flex items-center text-[10px] font-bold text-indigo-600 uppercase tracking-wide mt-0.5">
-                                    {(tech as any).category || 'General'}
+                                    {tech.category || 'General'}
                                   </span>
                                 </div>
                                 <div>
-                                  {(tech as any).isOnline ? (
+                                  {tech.isOnline ? (
                                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-800 animate-pulse">
                                       ● Online
                                     </span>
@@ -1656,7 +1689,31 @@ export default function DashboardPage() {
                             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Technician Service Fields</h3>
                             
                             <div>
-                              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Maintenance Action Notes</label>
+                              <div className="flex justify-between items-center mb-1">
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Maintenance Action Notes</label>
+                                <button
+                                  type="button"
+                                  onClick={() => handleImproveWriting(
+                                    issueUpdate.maintenanceNotes, 
+                                    `Maintenance action notes for issue: ${selectedIssue?.title} on asset ${selectedIssue?.assetCode}`,
+                                    (val) => setIssueUpdate({...issueUpdate, maintenanceNotes: val})
+                                  )}
+                                  disabled={isImprovingWriting || !issueUpdate.maintenanceNotes.trim()}
+                                  className="inline-flex items-center text-[9px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded hover:bg-indigo-100 transition disabled:opacity-50"
+                                >
+                                  {isImprovingWriting ? (
+                                    <>
+                                      <Loader2 className="w-2.5 h-2.5 animate-spin mr-1" />
+                                      Improving...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Sparkles className="w-2.5 h-2.5 mr-1" />
+                                      Gen Ai: Improve Writing
+                                    </>
+                                  )}
+                                </button>
+                              </div>
                               <textarea
                                 value={issueUpdate.maintenanceNotes}
                                 onChange={(e) => setIssueUpdate({...issueUpdate, maintenanceNotes: e.target.value})}
@@ -1970,16 +2027,28 @@ export default function DashboardPage() {
                           <tbody className="divide-y divide-slate-100">
                             {usersList.map((usr) => (
                               <tr key={usr._id || usr.email} className="hover:bg-slate-50/50 transition">
-                                <td className="py-3 px-4 text-sm font-bold text-slate-800">{usr.name}</td>
+                                <td className="py-3 px-4">
+                                  <div className="flex items-center">
+                                    {usr.role === 'Technician' && (
+                                      <span className={`w-2 h-2 rounded-full mr-2 ${usr.isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} title={usr.isOnline ? 'Online' : 'Offline'}></span>
+                                    )}
+                                    <span className="text-sm font-bold text-slate-800">{usr.name}</span>
+                                  </div>
+                                </td>
                                 <td className="py-3 px-4 text-xs font-mono text-slate-500">{usr.email}</td>
                                 <td className="py-3 px-4">
-                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                    usr.role === 'Admin' ? 'bg-purple-100 text-purple-800' :
-                                    usr.role === 'Technician' ? 'bg-blue-100 text-blue-800' :
-                                    'bg-slate-100 text-slate-800'
-                                  }`}>
-                                    {usr.role}
-                                  </span>
+                                  <div className="flex flex-col">
+                                    <span className={`inline-flex items-center w-fit px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                      usr.role === 'Admin' ? 'bg-purple-100 text-purple-800' :
+                                      usr.role === 'Technician' ? 'bg-blue-100 text-blue-800' :
+                                      'bg-slate-100 text-slate-800'
+                                    }`}>
+                                      {usr.role}
+                                    </span>
+                                    {usr.role === 'Technician' && usr.category && (
+                                      <span className="text-[9px] text-slate-400 font-bold uppercase mt-1">{usr.category}</span>
+                                    )}
+                                  </div>
                                 </td>
                                 <td className="py-3 px-4 text-right">
                                   {usr.role === 'User' && (

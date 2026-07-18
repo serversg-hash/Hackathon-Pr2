@@ -21,6 +21,7 @@ import {
   getIssueMessages,
   sendIssueMessage,
 } from '../controllers/issueController.js';
+import { improveWriting } from '../controllers/aiController.js';
 
 const router = Router();
 
@@ -51,6 +52,7 @@ router.post('/issues/public/report', reportIssue);
 // Public AI triage endpoint (helps construct complaints)
 router.post('/issues/public/triage', triageIssueAI);
 router.post('/issues/suggest-description', suggestIssueDescription);
+router.post('/ai/improve-writing', improveWriting);
 
 
 // ==========================================

@@ -66,6 +66,7 @@ export default function PublicAssetPage({ code }: { code?: string }) {
   const [triageResult, setTriageResult] = useState<AITriageResult | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [isImprovingWriting, setIsImprovingWriting] = useState(false);
 
   // Editable Form Fields (filled by AI Triage or manually)
   const [issueTitle, setIssueTitle] = useState('');
@@ -82,6 +83,29 @@ export default function PublicAssetPage({ code }: { code?: string }) {
   useEffect(() => {
     fetchAssetData();
   }, [assetCode]);
+
+  const handleImproveWriting = async () => {
+    if (!complaint.trim()) return;
+    try {
+      setIsImprovingWriting(true);
+      const res = await fetch('/api/v1/ai/improve-writing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: complaint,
+          context: `Reporting an issue for asset: ${asset?.name} (${asset?.category})`
+        })
+      });
+      const data = await res.json();
+      if (data.improvedText) {
+        setComplaint(data.improvedText);
+      }
+    } catch (err) {
+      console.error('Error improving writing:', err);
+    } finally {
+      setIsImprovingWriting(false);
+    }
+  };
 
   const fetchAssetData = async () => {
     try {
@@ -329,9 +353,29 @@ export default function PublicAssetPage({ code }: { code?: string }) {
                 
                 {/* Step 1: Natural Language Complaint */}
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Describe the Problem (Natural Language)
-                  </label>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-sm font-semibold text-slate-700">
+                      Describe the Problem (Natural Language)
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleImproveWriting}
+                      disabled={isImprovingWriting || !complaint.trim()}
+                      className="inline-flex items-center text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded hover:bg-indigo-100 transition disabled:opacity-50"
+                    >
+                      {isImprovingWriting ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                          Improving...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3 h-3 mr-1" />
+                          Gen Ai: Improve Writing
+                        </>
+                      )}
+                    </button>
+                  </div>
                   <textarea
                     value={complaint}
                     onChange={(e) => setComplaint(e.target.value)}
