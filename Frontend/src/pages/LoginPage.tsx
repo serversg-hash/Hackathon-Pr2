@@ -53,7 +53,7 @@ export default function LoginPage() {
         if (!res.ok) {
           throw new Error(data.error || 'Failed to request OTP');
         }
-        setSuccessMessage(`A customized OTP email has been sent to your inbox.`);
+        setSuccessMessage(`A customized OTP email has been sent to your inbox.${data.dev_otp ? ` [DEV OTP: ${data.dev_otp}]` : ''}`);
         setMode('reset');
       } else if (mode === 'reset') {
         if (!email || !otp || !newPassword) {

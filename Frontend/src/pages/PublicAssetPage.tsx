@@ -303,6 +303,20 @@ export default function PublicAssetPage({ code }: { code?: string }) {
                   This asset is retired. Issue reports and service requests are permanently disabled for this profile.
                 </p>
               </div>
+            ) : !user ? (
+              <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 text-center">
+                <ShieldAlert className="w-12 h-12 text-indigo-500 mx-auto mb-3" />
+                <h3 className="text-lg font-bold text-slate-900">Authentication Required</h3>
+                <p className="mt-2 text-sm text-slate-600">
+                  You must be logged in to submit a maintenance report for this asset. Please log in to proceed.
+                </p>
+                <button 
+                  onClick={() => window.location.href = '/'}
+                  className="mt-5 inline-flex items-center px-4 py-2 text-sm font-bold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition cursor-pointer"
+                >
+                  Log In to Report
+                </button>
+              </div>
             ) : (
               <form onSubmit={handleReportSubmit} className="space-y-6">
                 
