@@ -44,7 +44,14 @@ async function safeParseResponse(res: Response): Promise<any> {
 
 export default function PublicAssetPage({ code }: { code?: string }) {
   const { user } = useAuth();
-  const assetCode = code || window.location.pathname.split('/').pop() || '';
+  const getAssetCodeFromPath = () => {
+    const parts = window.location.pathname.split('/');
+    // Handle /assets/public/CODE or /assets/public/CODE/
+    const lastPart = parts[parts.length - 1] === '' ? parts[parts.length - 2] : parts[parts.length - 1];
+    return lastPart || '';
+  };
+
+  const assetCode = code || getAssetCodeFromPath();
   const [asset, setAsset] = useState<SafeAsset | null>(null);
   const [history, setHistory] = useState<SafeHistory[]>([]);
   const [loading, setLoading] = useState(true);

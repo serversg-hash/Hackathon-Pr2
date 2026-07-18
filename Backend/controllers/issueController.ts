@@ -137,6 +137,9 @@ export async function getAllIssues(req: AuthRequest, res: Response) {
     // If user is a standard User, restrict them to their own reported issues
     if (req.user?.role === 'User') {
       filter = { reporterEmail: req.user.email.toLowerCase() };
+    } else if (req.user?.role === 'Technician') {
+      // Technicians only see problems assigned to them
+      filter = { assignedTechnician: req.user.name };
     }
     const issues = await dbService.issues.find(filter);
     return res.json({ issues });
@@ -157,6 +160,11 @@ export async function getIssueByNumber(req: AuthRequest, res: Response) {
 
     // Secure it: standard 'User' role is restricted to their own issues
     if (req.user?.role === 'User' && issue.reporterEmail !== req.user.email) {
+      return res.status(403).json({ error: 'Forbidden: You do not have permission to view this issue.' });
+    }
+
+    // Role Rule: Technicians only see problems assigned to them
+    if (req.user?.role === 'Technician' && issue.assignedTechnician !== req.user.name) {
       return res.status(403).json({ error: 'Forbidden: You do not have permission to view this issue.' });
     }
 
@@ -465,6 +473,11 @@ export async function getIssueMessages(req: AuthRequest, res: Response) {
       return res.status(403).json({ error: 'Forbidden: You do not have permission to view this chat.' });
     }
 
+    // Role Rule: Technicians only see chats for issues assigned to them
+    if (req.user?.role === 'Technician' && issue.assignedTechnician !== req.user.name) {
+      return res.status(403).json({ error: 'Forbidden: You do not have permission to view this chat.' });
+    }
+
     const messages = await dbService.messages.find({ issueNumber });
     return res.json({ messages });
   } catch (err: any) {
@@ -490,6 +503,11 @@ export async function sendIssueMessage(req: AuthRequest, res: Response) {
 
     // Customers can only chat on their own reported issues
     if (req.user?.role === 'User' && issue.reporterEmail !== req.user.email) {
+      return res.status(403).json({ error: 'Forbidden: You do not have permission to chat in this channel.' });
+    }
+
+    // Role Rule: Technicians can only chat on issues assigned to them
+    if (req.user?.role === 'Technician' && issue.assignedTechnician !== req.user.name) {
       return res.status(403).json({ error: 'Forbidden: You do not have permission to chat in this channel.' });
     }
 

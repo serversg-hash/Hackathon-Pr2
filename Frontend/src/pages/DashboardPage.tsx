@@ -130,6 +130,22 @@ export default function DashboardPage() {
     }
   }, [user]);
 
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const messagesEndRef = React.useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [newChatMessage, setNewChatMessage] = useState('');
+
+  useEffect(() => {
+    if (chatMessages.length > 0) {
+      scrollToBottom();
+    }
+  }, [chatMessages]);
+
   const fetchData = useCallback(async () => {
     if (!user) return;
     try {
@@ -185,9 +201,7 @@ export default function DashboardPage() {
   const [qrInputCode, setQrInputCode] = useState('');
 
   // Chat states
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [newChatMessage, setNewChatMessage] = useState('');
-  const [isSendingMessage, setIsSendingMessage] = useState(false);
+  // isSendingMessage and chatMessages moved up to fix dependencies
 
   // Search & Filters
   const [assetSearch, setAssetSearch] = useState('');
@@ -482,7 +496,7 @@ export default function DashboardPage() {
       nextServiceDate: '',
     });
     if (user?.role === 'Admin') {
-      fetchUsers();
+      fetchTechnicians();
     }
   };
 
@@ -1619,10 +1633,10 @@ export default function DashboardPage() {
                                   className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm font-semibold"
                                 >
                                   <option value="">Unassigned</option>
-                                  {usersList.filter(u => u.role === 'Technician').map(tech => (
+                                  {techniciansList.map(tech => (
                                     <option key={tech.email} value={tech.name}>{tech.name} ({tech.email})</option>
                                   ))}
-                                  {issueUpdate.assignedTechnician && !usersList.some(u => u.name === issueUpdate.assignedTechnician) && (
+                                  {issueUpdate.assignedTechnician && !techniciansList.some(u => u.name === issueUpdate.assignedTechnician) && (
                                     <option value={issueUpdate.assignedTechnician}>{issueUpdate.assignedTechnician}</option>
                                   )}
                                 </select>
@@ -1772,6 +1786,7 @@ export default function DashboardPage() {
                                   );
                                 })
                               )}
+                              <div ref={messagesEndRef} />
                             </div>
 
                             {/* Message Input Box */}
